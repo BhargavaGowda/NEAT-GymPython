@@ -33,7 +33,10 @@ def fitFunc(genomes,config):
 
         for _ in range(500):
 
-            action = net.activate(observation)
+            output = net.activate(observation)
+            action = [0,0]
+            action[0] = output[0]
+            action[1] = -2*output[1]+2*output[2]
             observation, reward, terminated, truncated, info = env.step(action)
             fitness += reward
             actionTotal += np.linalg.norm(np.array(action))
@@ -57,9 +60,9 @@ def main():
     pop.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     pop.add_reporter(stats)
-    pop.add_reporter(neat.Checkpointer(200))
+    pop.add_reporter(neat.Checkpointer(100))
 
-    best = pop.run(fitFunc,1)
+    best = pop.run(fitFunc,1000)
 
     with open("bestGenome.pkl", "wb") as f:
         pickle.dump(best, f)

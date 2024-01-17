@@ -37,11 +37,13 @@ actionTotal=0
 runNum = 0
 while True:
 
-    action = net.activate(observation) # agent policy that uses the observation and info
+    output = net.activate(observation)
+    action = [0,0]
+    action[0] = output[0]
+    action[1] = -2*output[1]+2*output[2]
     observation, reward, terminated, truncated, info = env.step(action)
     fitness+=reward
     actionTotal += np.linalg.norm(np.array(action))
-
     if terminated or truncated:
         observation, info = env.reset()
         print("Run:",runNum,"Fitness and action:",fitness,actionTotal)
