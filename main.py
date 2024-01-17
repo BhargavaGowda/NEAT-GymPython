@@ -53,12 +53,13 @@ def fitFunc(genomes,config):
 def main():
 
     pop = neat.Population(config)
+    # pop = neat.Checkpointer.restore_checkpoint('neat-checkpoint-799')
     pop.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     pop.add_reporter(stats)
-    pop.add_reporter(neat.Checkpointer(50))
+    pop.add_reporter(neat.Checkpointer(200))
 
-    best = pop.run(fitFunc,1000)
+    best = pop.run(fitFunc,1)
 
     with open("bestGenome.pkl", "wb") as f:
         pickle.dump(best, f)
@@ -71,5 +72,6 @@ def main():
     visualize.draw_net(config, best, True)
     visualize.plot_stats(stats, ylog=False, view=True)
     visualize.plot_species(stats, view=True)
+    stats.save()
     
 main()

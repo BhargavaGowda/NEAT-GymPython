@@ -29,11 +29,13 @@ net = neat.nn.FeedForwardNetwork.create(genome, config)
 print(genome.size())
 visualize.draw_net(config, genome, True)
 
+numRuns = 10
 
+fitnessList=np.zeros(numRuns)
 fitness = 0
 actionTotal=0
-for _ in range(500):
-
+runNum = 0
+while True:
 
     action = net.activate(observation) # agent policy that uses the observation and info
     observation, reward, terminated, truncated, info = env.step(action)
@@ -42,9 +44,15 @@ for _ in range(500):
 
     if terminated or truncated:
         observation, info = env.reset()
-        print(fitness,actionTotal)
+        print("Run:",runNum,"Fitness and action:",fitness,actionTotal)
+        fitnessList[runNum]=fitness
+        runNum+=1
         fitness = 0
         actionTotal=0
+    
+    if runNum>=numRuns:
+        break
 
+print("avgFitness:",np.mean(fitnessList))
 
 env.close()
