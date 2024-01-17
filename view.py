@@ -37,7 +37,6 @@ for _ in range(500):
     observation, reward, terminated, truncated, info = env.step(action)
     fitness+=reward
     actionTotal += np.linalg.norm(np.array(action))
-    print(action)
 
     if terminated or truncated:
         observation, info = env.reset()

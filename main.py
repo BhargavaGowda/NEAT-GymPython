@@ -58,7 +58,7 @@ def main():
     pop.add_reporter(stats)
     pop.add_reporter(neat.Checkpointer(50))
 
-    best = pop.run(fitFunc,10)
+    best = pop.run(fitFunc,1000)
 
     with open("bestGenome.pkl", "wb") as f:
         pickle.dump(best, f)
@@ -68,7 +68,7 @@ def main():
 
 
     visualize.draw_net(config, best, True)
-    visualize.draw_net(config, best, True, prune_unused=True)
+    visualize.draw_net(config, best, True)
     visualize.plot_stats(stats, ylog=False, view=True)
     visualize.plot_species(stats, view=True)
     
