@@ -5,15 +5,16 @@ import pickle
 import numpy as np
 import visualize
 
-env = gym.make(
-    "LunarLander-v2",
-    continuous = True,
-    gravity = -10.0,
-    enable_wind = True,
-    wind_power = 10.0,
-    turbulence_power = 1.5,
-    render_mode = "human"
-)
+# env = gym.make(
+#     "LunarLander-v2",
+#     continuous = True,
+#     gravity = -10.0,
+#     enable_wind = True,
+#     wind_power = 10.0,
+#     turbulence_power = 1.5,
+#     render_mode = "human"
+# )
+env = gym.make("BipedalWalker-v3", render_mode = "human")
 env = FlattenObservation(env)
 observation, info = env.reset()
 
@@ -38,9 +39,11 @@ runNum = 0
 while True:
 
     output = net.activate(observation)
-    action = [0,0]
-    action[0] = output[0]
-    action[1] = -2*output[1]+2*output[2]
+    action = [0,0,0,0]
+    action[0] = output[0]-output[1]
+    action[1] = output[2]-output[3]
+    action[2] = output[4]-output[5]
+    action[3] = output[6]-output[7]
     observation, reward, terminated, truncated, info = env.step(action)
     fitness+=reward
     actionTotal += np.linalg.norm(np.array(action))
