@@ -39,11 +39,10 @@ while True:
 
     output = net.activate(observation)
     action = np.zeros(env.action_space.shape)
-    for i in range(len(action)):
-        action[i] = 2*output[2*i]-2*output[2*i+1]
+    action = [output[0],0]
+    action[1] = 2*output[2]-2*output[1]
     observation, reward, terminated, truncated, info = env.step(action)
     fitness+=reward
-    print(observation[0])
     if terminated or truncated:
         observation, info = env.reset()
         print("Run:",runNum,"Fitness:",fitness)
