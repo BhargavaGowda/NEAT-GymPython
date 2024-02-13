@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-env = gym.make(
-    "LunarLander-v2",
-    continuous = True,
-    gravity = -10.0,
-    enable_wind = False,
-    wind_power = 10.0,
-    turbulence_power = 1.5
-)
-# env = gym.make("BipedalWalker-v3", hardcore=False)
+# env = gym.make(
+#     "LunarLander-v2",
+#     continuous = True,
+#     gravity = -10.0,
+#     enable_wind = False,
+#     wind_power = 10.0,
+#     turbulence_power = 1.5
+# )
+env = gym.make("BipedalWalker-v3", hardcore=False)
 env = FlattenObservation(env)
 observation, info = env.reset()
 
@@ -24,7 +24,7 @@ config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                     "config.txt")
 
 popSize = 50
-gens = 300
+gens = 100
 
 def main():
 
@@ -35,9 +35,8 @@ def main():
     fitnessList = []
     bestFitness = -10000
     bestGenome = None
-    bestGenomeM1 = None
     fitCurve = np.zeros(gens)
-    numRolloutsPerEval = 3
+    numRolloutsPerEval = 1
 
     for i in range(popSize):
         newGenome = neat.DefaultGenome(i)
@@ -51,11 +50,19 @@ def main():
         genome = pop[i]
 
         net = neat.nn.FeedForwardNetwork.create(genome, config)
-        m1=0
+        
         fitness = 0
         worstFitness = 10000
         runNum = 1
+        step = 0
         observation, info = env.reset()
+        obsSize = observation.size
+        
+        # m1 = np.array([])
+        m1 = np.zeros(obsSize)
+        m2 = np.zeros(obsSize)
+        m3 = np.zeros(obsSize)
+
 
         while True:
 
@@ -64,33 +71,41 @@ def main():
             for i in range(len(action)):
                 action[i] = 2*output[2*i]-2*output[2*i+1]
             observation, reward, terminated, truncated, info = env.step(action)
-            fitness += reward
-
             if terminated or truncated:
+                    reward = 0
+            step+=1
+            fitness += reward
+            m1 += 0.1*(observation-m1)
+            m2 += 0.01*(observation-m2)
+            m3 += 0.001*(observation-m3)
+
+            # if step%20 == 0:
+            #     m1 = np.concatenate((m1,observation,[fitness]))
+
+
+            if step>300:
                 runNum+=1
+                
                 if fitness< worstFitness:
                     worstFitness = fitness
                 fitness = 0
-                x = observation[0]
-                if x <-0.3:
-                    m1 = 0
-                elif x<0.3:
-                    m1 = 1
-                else:
-                    m1 = 2
+                step = 0
+                
                 observation, info = env.reset()
             
             if runNum>numRolloutsPerEval:
                 break
 
-            
 
-        fitnessList.append(worstFitness)
-        metric1.append(m1)
+        # print(m1)
+        # print(m2)
+        # print(m3)
+        metric1.append(np.concatenate((m1,m2,m3)))
+        fitnessList.append(fitness)
 
 
-    for i in range(min(10,popSize)):
-        print(pop[i].fitness,metric1[i])
+    # for i in range(min(10,popSize)):
+    #     print(pop[i].fitness,metric1[i])
 
 
     for gen in range(gens):
@@ -101,30 +116,41 @@ def main():
             parent1 = pop[g]
             parent2 = None
             parent2index = 0
-            closestDist = 10000
+            bestCriticality = 0
             for g2 in range(popSize):
                 if g!=g2:
-                    dist = parent1.distance(pop[g2],genomeConfig)
-                    if dist<closestDist:
+                    genomicDist = parent1.distance(pop[g2],genomeConfig)
+                    behaviourDist = np.linalg.norm(np.array(metric1[g])-np.array(metric1[g2]))
+                    criticality = behaviourDist/genomicDist
+                    if criticality>bestCriticality:
                         parent2 = pop[g2]
                         parent2index = g2
-                        closestDist = dist
+                        bestCriticality = criticality
             
             #print("p1:",g,"p2:",parent2index)
             if not parent2:
                 raise RuntimeError("no parent2")
+            
 
 
-            testGenome = newGenome = neat.DefaultGenome(g)
+
+            testGenome = neat.DefaultGenome(g)
             testGenome.configure_crossover(parent1,parent2,genomeConfig)
             testGenome.mutate(genomeConfig)
+            testGenome.fitness = 0
+
+            pop[g] = testGenome
 
             net = neat.nn.FeedForwardNetwork.create(testGenome, config)
             fitness = 0
             worstFitness = 10000
+            step = 0
             runNum = 1
-            m1=0
             observation, info = env.reset()
+            # m1 = np.array([])
+            m1 = np.zeros(obsSize)
+            m2 = np.zeros(obsSize)
+            m3 = np.zeros(obsSize)
 
             while True:
 
@@ -133,39 +159,31 @@ def main():
                 for i in range(len(action)):
                     action[i] = 2*output[2*i]-2*output[2*i+1]
                 observation, reward, terminated, truncated, info = env.step(action)
-                fitness += reward
+                step+=1
                 if terminated or truncated:
+                    reward = 0
+                fitness += reward
+                m1 += 0.1*(observation-m1)
+                m2 += 0.01*(observation-m2)
+                m3 += 0.001*(observation-m3)
+                # if step%20 == 0:
+                #     m1 = np.concatenate((m1,observation,[fitness]))
+                
+                if step>300:
                     runNum+=1
-                    observation, info = env.reset()
+                    
                     if fitness< worstFitness:
                         worstFitness = fitness
                     fitness = 0
-                    x = observation[0]
-                    if x<-0.3:
-                        m1 = 0
-                    elif x<0.3:
-                        m1 = 1
-                    else:
-                        m1 = 2
-            
-                if runNum>numRolloutsPerEval:
-                    break
-            
-            #print("p1 metric:", metric1[g], "p2 metric:", metric1[parent2index], "test action total:", m1)
-            # novelty = (np.linalg.norm(m1-metric1[g])+np.linalg.norm(m1-metric1[parent2index]))/2
-            #print("novelty:", novelty)
-            if m1 != metric1[g] and m1 != metric1[parent2index]:
-                testGenome.fitness = 100
-            else:
-                testGenome.fitness = 0
-                
+                    step = 0
+                    observation, info = env.reset()
 
-            #Note: this fitness is novelty
-            if testGenome.fitness>0:
-                pop[g] = testGenome
-                metric1[g] = m1
-                #not this
-                fitnessList[g] = worstFitness
+                if runNum>numRolloutsPerEval:
+                    break     
+
+            metric1[g] = np.concatenate((m1,m2,m3))
+            fitnessList[g] = worstFitness
+        
 
             if worstFitness>bestFitness:
                 bestFitness = worstFitness
@@ -174,17 +192,15 @@ def main():
 
         #reporter
         print("avg fitness", np.mean(fitnessList) ,"best Fitness:", bestFitness)
-        for i in range(min(10,popSize)):
-            print(i,metric1[i])
+        # for i in range(min(10,popSize)):
+        #     print(i)
         fitCurve[gen] = bestFitness
-        #discount novelty every generation
-        for i in range(popSize):
-            pop[i].fitness*=0.9
+        
+        if gen%100 == 0 and gen>0:
+            with open("gen"+str(gen)+"_CheckpointCrit.pkl", "wb") as f:
+                pickle.dump(pop, f)
 
-        #elitism 1
-        pop[0] = bestGenome
-        metric1[0] = bestGenomeM1
-        fitnessList[0] = bestFitness
+
 
 
     print("BestFitness:", bestFitness)
@@ -194,13 +210,13 @@ def main():
     plt.show()
     
 
-    with open("bestGenomeLNS.pkl", "wb") as f:
+    with open("bestGenomeCrit.pkl", "wb") as f:
         pickle.dump(bestGenome, f)
-        f.close()
 
-    with open("lastPopLNS.pkl", "wb") as f:
+
+    with open("lastPopCrit.pkl", "wb") as f:
         pickle.dump(pop, f)
-        f.close()
+
 
     
 
