@@ -23,8 +23,8 @@ config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
                     "config.txt")
 
-popSize = 50
-gens = 100
+popSize = 100
+gens = 3000
 
 def main():
 
@@ -36,6 +36,7 @@ def main():
     bestFitness = -10000
     bestGenome = None
     fitCurve = np.zeros(gens)
+    popMaxFitCurve = np.zeros(gens)
     numRolloutsPerEval = 1
 
     for i in range(popSize):
@@ -188,13 +189,13 @@ def main():
             if worstFitness>bestFitness:
                 bestFitness = worstFitness
                 bestGenome = testGenome
-                bestGenomeM1 = m1
 
         #reporter
-        print("avg fitness", np.mean(fitnessList) ,"best Fitness:", bestFitness)
+        print("best from current pop:", np.max(fitnessList) ,"best overall:", bestFitness)
         # for i in range(min(10,popSize)):
         #     print(i)
         fitCurve[gen] = bestFitness
+        popMaxFitCurve[gen] = np.max(fitnessList)
         
         if gen%100 == 0 and gen>0:
             with open("gen"+str(gen)+"_CheckpointCrit.pkl", "wb") as f:
@@ -207,6 +208,7 @@ def main():
     visualize.draw_net(config, bestGenome, True)
 
     plt.plot(fitCurve)
+    plt.plot(popMaxFitCurve)
     plt.show()
     
 

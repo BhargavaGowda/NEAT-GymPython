@@ -5,15 +5,15 @@ import pickle
 import visualize
 import numpy as np
 
-env = gym.make(
-    "LunarLander-v2",
-    continuous = True,
-    gravity = -10.0,
-    enable_wind = False,
-    wind_power = 10.0,
-    turbulence_power = 1.5
-)
-# env = gym.make("BipedalWalker-v3", hardcore=False)
+# env = gym.make(
+#     "LunarLander-v2",
+#     continuous = True,
+#     gravity = -10.0,
+#     enable_wind = False,
+#     wind_power = 10.0,
+#     turbulence_power = 1.5
+# )
+env = gym.make("BipedalWalker-v3", hardcore=False)
 env = FlattenObservation(env)
 observation, info = env.reset()
 
@@ -24,7 +24,7 @@ config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
 
 def fitFunc(genomes,config):
 
-    numRolloutsPerEval = 3
+    numRolloutsPerEval = 1
 
     for genome_id, genome in genomes:
 
@@ -70,7 +70,7 @@ def main():
     pop.add_reporter(stats)
     pop.add_reporter(neat.Checkpointer(50))
 
-    best = pop.run(fitFunc,300)
+    best = pop.run(fitFunc,100)
 
     with open("bestGenome.pkl", "wb") as f:
         pickle.dump(best, f)

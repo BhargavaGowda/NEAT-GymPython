@@ -6,14 +6,14 @@ reset_on_extinction   = False
 
 [DefaultGenome]
 # node activation options
-activation_default      = sigmoid
-activation_mutate_rate  = 0.0
-activation_options      = sigmoid
+activation_default      = random
+activation_mutate_rate  = 0.1
+activation_options      = sigmoid tanh gauss relu identity cube
 
 # node aggregation options
-aggregation_default     = sum
-aggregation_mutate_rate = 0.0
-aggregation_options     = sum
+aggregation_default     = random
+aggregation_mutate_rate = 0.1
+aggregation_options     = sum mean min max maxabs
 
 # node bias options
 bias_init_mean          = 0.0
@@ -25,8 +25,8 @@ bias_mutate_rate        = 0.7
 bias_replace_rate       = 0.1
 
 # genome compatibility options
-compatibility_disjoint_coefficient = 1.0
-compatibility_weight_coefficient   = 0.5
+compatibility_disjoint_coefficient = 0.8
+compatibility_weight_coefficient   = 0.8
 
 # connection add/remove rates
 conn_add_prob           = 0.1
@@ -40,8 +40,8 @@ feed_forward            = True
 initial_connection      = partial 0.1
 
 # node add/remove rates
-node_add_prob           = 0.02
-node_delete_prob        = 0.02
+node_add_prob           = 0.1
+node_delete_prob        = 0.1
 
 # network parameters
 num_hidden              = 0
