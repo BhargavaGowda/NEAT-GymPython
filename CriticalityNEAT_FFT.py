@@ -37,7 +37,7 @@ def main():
     bestFitness = -10000
     bestGenome = None
     fitCurve = np.zeros(gens)
-    popMaxFitCurve = np.zeros(gens)
+    popMeanFitCurve = np.zeros(gens)
     numRolloutsPerEval = 1
 
     for i in range(popSize):
@@ -181,11 +181,11 @@ def main():
                 bestGenome = testGenome
 
         #reporter
-        print("best from current pop:", np.max(fitnessList) ,"best overall:", bestFitness)
+        print("avg current pop:", np.mean(fitnessList) ,"best overall:", bestFitness)
         # for i in range(min(10,popSize)):
         #     print(i)
         fitCurve[gen] = bestFitness
-        popMaxFitCurve[gen] = np.max(fitnessList)
+        popMeanFitCurve[gen] = np.mean(fitnessList)
         
         if gen%100 == 0 and gen>0:
             with open("gen"+str(gen)+"_CheckpointCrit.pkl", "wb") as f:
@@ -198,7 +198,7 @@ def main():
     visualize.draw_net(config, bestGenome, True)
 
     plt.plot(fitCurve)
-    plt.plot(popMaxFitCurve)
+    plt.plot(popMeanFitCurve)
     plt.show()
     
 
