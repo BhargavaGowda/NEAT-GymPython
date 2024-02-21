@@ -15,6 +15,7 @@ import numpy as np
 #     wind_power = 10.0,
 #     turbulence_power = 1.5
 # )
+
 env = gym.make("BipedalWalker-v3", hardcore=False)
 env = FlattenObservation(env)
 observation, info = env.reset()
@@ -23,8 +24,8 @@ config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
                     "config.txt")
 
-popSize = 50
-gens = 300
+popSize = 100
+gens = 5000
 
 def main():
 
@@ -48,22 +49,19 @@ def main():
     #Warmup
         
     for i in range(popSize):
-        genome = pop[i]
+        genome = pop[1]
 
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         
         fitness = 0
         worstFitness = 10000
         runNum = 1
+        totalSteps = 300
         step = 0
         observation, info = env.reset()
         obsSize = observation.size
         
-        # m1 = np.array([])
-        m1 = np.zeros(obsSize)
-        m2 = np.zeros(obsSize)
-        m3 = np.zeros(obsSize)
-
+        obsStack = np.zeros((totalSteps,obsSize))
 
         while True:
 
@@ -72,19 +70,16 @@ def main():
             for i in range(len(action)):
                 action[i] = 2*output[2*i]-2*output[2*i+1]
             observation, reward, terminated, truncated, info = env.step(action)
+            obsStack[step] = observation
             if terminated or truncated:
                     reward = 0
             step+=1
             fitness += reward
-            m1 += 0.1*(observation-m1)
-            m2 += 0.01*(observation-m2)
-            m3 += 0.001*(observation-m3)
-
-            # if step%20 == 0:
-            #     m1 = np.concatenate((m1,observation,[fitness]))
+            
+            
 
 
-            if step>300:
+            if step>=totalSteps:
                 runNum+=1
                 
                 if fitness< worstFitness:
@@ -98,11 +93,9 @@ def main():
                 break
 
 
-        # print(m1)
-        # print(m2)
-        # print(m3)
-        # metric1.append(np.concatenate((m1,m2,m3)))
-        metric1.append(worstFitness)
+        descriptor = np.abs(np.fft.fft(obsStack, 10,0))
+        
+        metric1.append(descriptor)
         fitnessList.append(worstFitness)
 
 
@@ -116,6 +109,8 @@ def main():
         for g in range(popSize):
 
             parent1 = pop[g]
+            if fitnessList[g] == bestFitness:
+                next
             parent2 = None
             parent2index = 0
             bestCriticality = 0
@@ -149,10 +144,7 @@ def main():
             step = 0
             runNum = 1
             observation, info = env.reset()
-            # m1 = np.array([])
-            m1 = np.zeros(obsSize)
-            m2 = np.zeros(obsSize)
-            m3 = np.zeros(obsSize)
+            obsStack = np.zeros((totalSteps,obsSize))
 
             while True:
 
@@ -161,17 +153,13 @@ def main():
                 for i in range(len(action)):
                     action[i] = 2*output[2*i]-2*output[2*i+1]
                 observation, reward, terminated, truncated, info = env.step(action)
+                obsStack[step] = observation
                 step+=1
                 if terminated or truncated:
                     reward = 0
                 fitness += reward
-                m1 += 0.1*(observation-m1)
-                m2 += 0.01*(observation-m2)
-                m3 += 0.001*(observation-m3)
-                # if step%20 == 0:
-                #     m1 = np.concatenate((m1,observation,[fitness]))
                 
-                if step>300:
+                if step>=totalSteps:
                     runNum+=1
                     
                     if fitness< worstFitness:
@@ -183,8 +171,8 @@ def main():
                 if runNum>numRolloutsPerEval:
                     break     
 
-            # metric1[g] = np.concatenate((m1,m2,m3))
-            metric1[g] = worstFitness
+            descriptor = np.abs(np.fft.fft(obsStack, 10,0))
+            metric1[g] = descriptor
             fitnessList[g] = worstFitness
         
 

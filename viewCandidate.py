@@ -35,6 +35,7 @@ numRuns = 20
 fitnessList=np.zeros(numRuns)
 fitness = 0
 runNum = 0
+
 while True:
 
     output = net.activate(observation)
@@ -47,11 +48,15 @@ while True:
         observation, info = env.reset()
         print("Run:",runNum,"Fitness:",fitness)
         fitnessList[runNum]=fitness
-        runNum+=1
         fitness = 0
-    
+        runNum+=1
+
     if runNum>=numRuns:
         break
+
+    
+
+
 
 print("maxFitness:",np.max(fitnessList))
 
